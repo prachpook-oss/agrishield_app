@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriShield AI - Chemical Risk Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #d1fae5;
+            --secondary: #3b82f6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+            --bg-page: #f9fafb;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        /* Mobile Container Simulation */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 900px;
+            background: var(--bg-page);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @media (min-width: 480px) {
+            .app-container {
+                border-radius: 40px;
+                height: 850px;
+                border: 8px solid #111;
+            }
+        }
+
+        /* Transitions */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-page);
+            overflow-y: auto;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .page.prev {
+            transform: translateX(-30%);
+            opacity: 0;
+        }
+
+        .page.next {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        /* Typography */
+        h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        h2 { font-size: 22px; font-weight: 600; margin-bottom: 16px; }
+        p { font-size: 16px; color: var(--text-sub); line-height: 1.5; }
+
+        /* Components */
+        .header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 18px 24px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 16px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Forms */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .input-group input[type="text"], 
+        .input-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #f3f4f6;
+            cursor: pointer;
+        }
+
+        .checkbox-item input {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: var(--primary);
+        }
+
+        /* Scan Page */
+        .scan-frame {
+            border: 3px dashed var(--primary);
+            border-radius: 20px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        /* Result Page Styling */
+        .result-header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .result-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .risk-low { background: #dcfce7; color: #166534; }
+        .risk-medium { background: #fef9c3; color: #854d0e; }
+        .risk-high { background: #fee2e2; color: #991b1b; }
+
+        .instruction-section {
+            margin-top: 24px;
+        }
+
+        .footer-nav {
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        /* Icons placeholder using SVG or simple Text */
+        .icon { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Home Page -->
+    <section id="page-home" class="page active">
+        <div class="header">
+            <div class="logo-box">🛡️</div>
+            <h1>AgriShield AI</h1>
+            <p>Smart Chemical Exposure Analysis</p>
+        </div>
+        
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+            <button class="btn btn-primary" onclick="navigateTo('page-scan')">
+                <span>📸</span> Scan Chemical
+            </button>
+            <button class="btn btn-outline" onclick="navigateTo('page-input')">
+                <span>📝</span> Questionnaire
+            </button>
+            <button class="btn btn-outline">
+                <span>📜</span> History
+            </button>
+        </div>
+
+        <div class="card" style="margin-top: 20px; background: var(--primary-light); border: none;">
+            <p style="font-size: 14px; color: var(--primary-dark); font-weight: 500;">
+                Tip: Always wear personal protective equipment when handling chemicals.
+            </p>
+        </div>
+    </section>
+
+    <!-- Scan Page -->
+    <section id="page-scan" class="page">
+        <button class="btn btn-outline" style="width: fit-content; padding: 10px 16px; font-size: 14px; margin-bottom: 20px;" onclick="navigateTo('page-home')">← Back</button>
+        <h2>Scan Chemical</h2>
+        <p>Take or upload a photo of the chemical label for analysis.</p>
+        
+        <div class="scan-frame" id="drop-area">
+            <span id="scan-placeholder" style="color: var(--text-sub); text-align: center;">
+                <span style="font-size: 48px; display: block; margin-bottom: 10px;">📷</span>
+                Tap to upload or take a photo
+            </span>
+            <img id="preview-image" src="" alt="Chemical label">
+            <input type="file" id="file-input" style="display: none;" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary" id="btn-analyze" disabled onclick="handleScanComplete()">Analyze Chemical</button>
+    </section>
+
+    <!-- Input Form Page -->
+    <section id="page-input" class="page">
+        <button class="btn btn-outline" style="width: fit-content; padding: 10px 16px; font-size: 14px; margin-bottom: 20px;" onclick="navigateTo('page-home')">← Back</button>
+        <h2>Exposure Details</h2>
+        
+        <div class="input-group">
+            <label>Chemical Name</label>
+            <input type="text" id="chemical-name" placeholder="e.g. Glyphosate, Paraquat">
+        </div>
+
+        <div class="input-group">
+            <label>Exposure Duration</label>
+            <select id="duration">
+                <option value="1">Less than 1 hour</option>
+                <option value="4">1–4 hours</option>
+                <option value="8">More than 4 hours</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Protective Equipment Used</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" name="ppe" value="mask"> Mask
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" name="ppe" value="gloves"> Gloves
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" name="ppe" value="suit"> Protective Suit
+                </label>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <button class="btn btn-primary" onclick="navigateTo('page-symptoms')">Next: Symptoms →</button>
+        </div>
+    </section>
+
+    <!-- Symptoms Page -->
+    <section id="page-symptoms" class="page">
+        <button class="btn btn-outline" style="width: fit-content; padding: 10px 16px; font-size: 14px; margin-bottom: 20px;" onclick="navigateTo('page-input')">← Back</button>
+        <h2>Check Symptoms</h2>
+        <p style="margin-bottom: 20px;">Select any symptoms you are currently experiencing.</p>
+
+        <div class="input-group">
+            <label>Nervous System</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="dizziness"> Dizziness</label>
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="fainting"> Fainting</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Respiratory System</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="breathing"> Difficulty Breathing</label>
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="coughing"> Persistent Cough</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Skin & Eyes</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="rash"> Skin Rash / Itch</label>
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="eyes"> Eye Irritation</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Digestive System</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="symptom" value="nausea"> Nausea / Vomiting</label>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <button class="btn btn-primary" style="background: var(--primary-dark);" onclick="calculateAndShowResult()">Run AI Analysis</button>
+        </div>
+    </section>
+
+    <!-- Result Page -->
+    <section id="page-result" class="page">
+        <div class="result-header">
+            <div id="result-icon" class="result-icon">✅</div>
+            <div id="risk-badge" class="risk-badge risk-low">Low Risk</div>
+            <h2 id="result-title">System Analysis Complete</h2>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 16px; margin-bottom: 12px;">Report Summary</h3>
+            <p style="font-size: 14px; margin-bottom: 8px;"><b>Chemical:</b> <span id="res-chemical">-</span></p>
+            <p style="font-size: 14px; margin-bottom: 8px;"><b>Duration:</b> <span id="res-duration">-</span></p>
+            <p style="font-size: 14px; margin-bottom: 8px;"><b>PPE Usage:</b> <span id="res-ppe">-</span></p>
+            <p style="font-size: 14px;"><b>Symptoms:</b> <span id="res-symptoms">-</span></p>
+        </div>
+
+        <div class="instruction-section">
+            <h3 style="font-size: 18px; margin-bottom: 12px;">First Aid Instructions</h3>
+            <div id="first-aid-content" class="card" style="border-left: 5px solid var(--primary);">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <div class="instruction-section">
+            <h3 style="font-size: 18px; margin-bottom: 12px;">Recommendations</h3>
+            <div id="recommendations-content" style="padding-left: 20px; font-size: 14px; color: var(--text-sub);">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <button class="btn btn-primary" onclick="resetApp()">Done</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    const appState = {
+        currentPage: 'page-home',
+        chemicalName: '',
+        duration: '',
+        ppe: [],
+        symptoms: []
+    };
+
+    function navigateTo(pageId) {
+        const pages = document.querySelectorAll('.page');
+        const targetPage = document.getElementById(pageId);
+        const pagesArray = Array.from(pages);
+        const nextPageIndex = pagesArray.indexOf(targetPage);
+        const currentPageIndex = pagesArray.findIndex(p => p.classList.contains('active'));
+
+        pages.forEach((page, index) => {
+            page.classList.remove('active', 'prev', 'next');
+            if (index < nextPageIndex) {
+                page.classList.add('prev');
+            } else if (index > nextPageIndex) {
+                page.classList.add('next');
+            }
+        });
+
+        targetPage.classList.add('active');
+        appState.currentPage = pageId;
+        
+        // Scroll to top on navigation
+        targetPage.scrollTop = 0;
+    }
+
+    // Scan handling
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+    const previewImage = document.getElementById('preview-image');
+    const scanPlaceholder = document.getElementById('scan-placeholder');
+    const btnAnalyze = document.getElementById('btn-analyze');
+
+    dropArea.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                previewImage.src = re.target.result;
+                previewImage.style.display = 'block';
+                scanPlaceholder.style.display = 'none';
+                btnAnalyze.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    function handleScanComplete() {
+        // Auto-fill chemical name for demo purposes if it looks like we detected something
+        document.getElementById('chemical-name').value = "Generic Agrochemical";
+        navigateTo('page-input');
+    }
+
+    function calculateAndShowResult() {
+        // Collect data
+        appState.chemicalName = document.getElementById('chemical-name').value || 'Unknown Chemical';
+        appState.duration = document.getElementById('duration').value;
+        
+        appState.ppe = Array.from(document.querySelectorAll('input[name="ppe"]:checked')).map(i => i.value);
+        appState.symptoms = Array.from(document.querySelectorAll('input[name="symptom"]:checked')).map(i => i.value);
+
+        const symptomCount = appState.symptoms.length;
+        const durationValue = parseInt(appState.duration);
+        
+        let risk = 'low';
+        if (symptomCount >= 4 || (symptomCount >= 2 && durationValue >= 8)) {
+            risk = 'high';
+        } else if (symptomCount >= 2 || durationValue >= 4) {
+            risk = 'medium';
+        }
+
+        displayResult(risk);
+        navigateTo('page-result');
+    }
+
+    function displayResult(risk) {
+        const badge = document.getElementById('risk-badge');
+        const icon = document.getElementById('result-icon');
+        const firstAid = document.getElementById('first-aid-content');
+        const recs = document.getElementById('recommendations-content');
+
+        // Reset classes
+        badge.className = 'risk-badge';
+        
+        // Populate summary
+        document.getElementById('res-chemical').innerText = appState.chemicalName;
+        document.getElementById('res-duration').innerText = appState.duration == '1' ? 'Less than 1 hr' : (appState.duration == '4' ? '1-4 hrs' : 'More than 4 hrs');
+        document.getElementById('res-ppe').innerText = appState.ppe.length > 0 ? appState.ppe.join(', ') : 'None';
+        document.getElementById('res-symptoms').innerText = appState.symptoms.length > 0 ? appState.symptoms.join(', ') : 'None reported';
+
+        if (risk === 'high') {
+            badge.innerText = 'High Risk';
+            badge.classList.add('risk-high');
+            icon.innerText = '🚨';
+            firstAid.style.borderLeftColor = 'var(--danger)';
+            firstAid.innerHTML = `
+                <p><b>URGENT:</b> Seek medical attention immediately. Bring the chemical label with you.</p>
+                <p style="margin-top:8px;">If inhaled: Move to fresh air. If on skin: Wash with plenty of water for 15 mins.</p>
+            `;
+            recs.innerHTML = `
+                <ul style="list-style-type: disc; margin-top: 10px;">
+                    <li>Call emergency services or poison control.</li>
+                    <li>Do not induce vomiting unless told by professionals.</li>
+                    <li>Rest and monitor vital signs.</li>
+                </ul>
+            `;
+        } else if (risk === 'medium') {
+            badge.innerText = 'Medium Risk';
+            badge.classList.add('risk-medium');
+            icon.innerText = '⚠️';
+            firstAid.style.borderLeftColor = 'var(--warning)';
+            firstAid.innerHTML = `
+                <p><b>Caution:</b> Monitor your symptoms closely. If they worsen, visit a clinic.</p>
+                <p style="margin-top:8px;">Wash exposed areas thoroughly and change all clothing.</p>
+            `;
+            recs.innerHTML = `
+                <ul style="list-style-type: disc; margin-top: 10px;">
+                    <li>Hydrate well with clean water.</li>
+                    <li>Store chemicals in a secure, ventilated area.</li>
+                    <li>Review PPE requirements for this specific chemical.</li>
+                </ul>
+            `;
+        } else {
+            badge.innerText = 'Low Risk';
+            badge.classList.add('risk-low');
+            icon.innerText = '✅';
+            firstAid.style.borderLeftColor = 'var(--success)';
+            firstAid.innerHTML = `
+                <p><b>Stable:</b> No immediate danger detected. Continue to monitor for delayed reactions.</p>
+            `;
+            recs.innerHTML = `
+                <ul style="list-style-type: disc; margin-top: 10px;">
+                    <li>Always wear gloves and masks in the future.</li>
+                    <li>Keep a log of chemical usage times.</li>
+                </ul>
+            `;
+        }
+    }
+
+    function resetApp() {
+        // Reset inputs
+        document.getElementById('chemical-name').value = '';
+        document.getElementById('duration').value = '1';
+        document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+        previewImage.style.display = 'none';
+        scanPlaceholder.style.display = 'block';
+        btnAnalyze.disabled = true;
+        
+        navigateTo('page-home');
+    }
+</script>
+
+</body>
+</html>
