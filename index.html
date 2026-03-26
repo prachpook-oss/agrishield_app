@@ -1058,22 +1058,32 @@
             const imgData = previewImage.src.split(',')[1]; // Base64 part
             const lang = appState.currentLang;
             
-            // Import SDK dynamically via ESM
-            const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
-            const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            try {
+                // Import SDK dynamically via ESM
+                const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
+                const genAI = new GoogleGenerativeAI(key);
+                
+                // Use gemini-1.5-flash as it's the most compatible multimodal model
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            const prompt = `Identify the chemical name or active ingredient on this agricultural label. 
-                           Return ONLY the name in ${lang === 'th' ? 'Thai' : 'English'}. 
-                           If it's an insecticide/herbicide, include that in parentheses. 
-                           Example: Glyphosate (Herbicide).`;
+                const prompt = `Identify the chemical name or active ingredient on this agricultural label. 
+                               Return ONLY the name in ${lang === 'th' ? 'Thai' : 'English'}. 
+                               If it's an insecticide/herbicide, include that in parentheses. 
+                               Example: Glyphosate (Herbicide).`;
 
-            const result = await model.generateContent([
-                prompt,
-                { inlineData: { data: imgData, mimeType: "image/jpeg" } }
-            ]);
-            
-            return result.response.text().trim();
+                const result = await model.generateContent([
+                    prompt,
+                    { inlineData: { data: imgData, mimeType: "image/jpeg" } }
+                ]);
+                
+                const response = await result.response;
+                return response.text().trim();
+            } catch (error) {
+                if (error.message.includes('404')) {
+                    throw new Error("Model 'gemini-1.5-flash' not found. Please ensure your API key has access to this model and your region is supported.");
+                }
+                throw error;
+            }
         }
 
         function calculateAndShowResult() {
