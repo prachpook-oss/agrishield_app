@@ -167,6 +167,37 @@
             opacity: 0.9;
         }
 
+        .btn-primary:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            top: 50%;
+            left: 50%;
+            margin-top: -12px;
+            margin-left: -12px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .btn-outline {
             background: white;
             border: 2px solid var(--primary-light);
@@ -300,6 +331,23 @@
             padding-top: 20px;
         }
 
+        /* Settings Toggle */
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+        }
+
         /* Language Switcher */
         .lang-switcher {
             position: absolute;
@@ -385,6 +433,7 @@
     <div class="app-container">
         <!-- Home Page -->
         <section id="page-home" class="page active">
+            <div class="settings-btn" onclick="navigateTo('page-settings')">⚙️</div>
             <div class="lang-switcher">
                 <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
                 <button class="lang-btn" onclick="setLanguage('th')">TH</button>
@@ -411,6 +460,33 @@
                 <p style="font-size: 14px; color: var(--primary-dark); font-weight: 500;" data-i18n="tip-text">
                     Tip: Always wear personal protective equipment when handling chemicals.
                 </p>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="page-settings" class="page">
+            <button class="btn btn-outline"
+                style="width: fit-content; padding: 10px 16px; font-size: 14px; margin-bottom: 20px;"
+                onclick="navigateTo('page-home')">← <span data-i18n="btn-back">Back</span></button>
+            <h2 data-i18n="settings-title">AI Settings</h2>
+            <p style="margin-bottom: 24px;" data-i18n="settings-subtitle">Configure your AI connection for real label scanning.</p>
+
+            <div class="card">
+                <div class="input-group">
+                    <label>Gemini API Key</label>
+                    <input type="password" id="gemini-key" placeholder="AIza..." style="font-family: monospace;">
+                </div>
+                <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px;" data-i18n="settings-help">
+                    Your key is stored locally in your browser. Get a key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary);">Google AI Studio</a>.
+                </p>
+                <button class="btn btn-primary" onclick="saveSettings()" data-i18n="btn-save">Save Settings</button>
+            </div>
+            
+            <div class="card" style="border: 2px solid var(--primary-light);">
+                <h3 style="font-size: 14px; margin-bottom: 8px;">Current Mode:</h3>
+                <div id="api-status" style="font-weight: 600; color: var(--text-sub);">
+                    Simulator (Default)
+                </div>
             </div>
         </section>
 
@@ -611,6 +687,7 @@
                 "scan-subtitle": "Take or upload a photo of the chemical label for analysis.",
                 "scan-upload-text": "Tap to upload or take a photo",
                 "btn-analyze": "Analyze Chemical",
+                "btn-analyzing": "Analyzing...",
                 "input-title": "Exposure Details",
                 "label-chem-name": "Chemical Name",
                 "placeholder-chem": "e.g. Glyphosate, Paraquat",
@@ -662,7 +739,13 @@
                 "risk-med-aid": "<b>Caution:</b> Monitor your symptoms closely. If they worsen, visit a clinic.<p style='margin-top:8px;'>Wash exposed areas thoroughly and change all clothing.</p>",
                 "risk-med-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>Hydrate well with clean water.</li><li>Store chemicals in a secure, ventilated area.</li><li>Review PPE requirements for this specific chemical.</li></ul>",
                 "risk-low-aid": "<b>Stable:</b> No immediate danger detected. Continue to monitor for delayed reactions.",
-                "risk-low-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>Always wear gloves and masks in the future.</li><li>Keep a log of chemical usage times.</li></ul>"
+                "risk-low-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>Always wear gloves and masks in the future.</li><li>Keep a log of chemical usage times.</li></ul>",
+                "settings-title": "AI Settings",
+                "settings-subtitle": "Configure your AI connection for real label scanning.",
+                "settings-help": "Your key is stored locally in your browser. Get a key at <a href='https://aistudio.google.com/app/apikey' target='_blank' style='color: var(--primary);'>Google AI Studio</a>.",
+                "api-status-sim": "Simulator (Default)",
+                "api-status-ready": "Gemini API Ready ✅",
+                "btn-save": "Save Settings"
             },
             th: {
                 "app-title": "AgriShield AI",
@@ -676,6 +759,7 @@
                 "scan-subtitle": "ถ่ายรูปหรืออัปโหลดรูปฉลากสารเคมีเพื่อเริ่มการวิเคราะห์",
                 "scan-upload-text": "แตะเพื่ออัปโหลดหรือถ่ายรูป",
                 "btn-analyze": "วิเคราะห์สารเคมี",
+                "btn-analyzing": "กำลังวิเคราะห์...",
                 "input-title": "รายละเอียดการสัมผัส",
                 "label-chem-name": "ชื่อสารเคมี",
                 "placeholder-chem": "เช่น ไกลโฟเซต, พาราควอต",
@@ -727,7 +811,13 @@
                 "risk-med-aid": "<b>ข้อควรระวัง:</b> เฝ้าระวังอาการอย่างใกล้ชิด หากอาการรุนแรงขึ้นให้ไปรับการตรวจ<p style='margin-top:8px;'>ล้างร่างกายในส่วนที่สัมผัสสารเคมีและเปลี่ยนเสื้อผ้าทันที</p>",
                 "risk-med-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>ดื่มน้ำสะอาดให้เพียงพอ</li><li>เก็บสารเคมีในที่ปลอดภัยและอากาศถ่ายเท</li><li>ตรวจสอบมาตรฐานอุปกรณ์ป้องกันสำหรับสารเคมีชนิดนี้</li></ul>",
                 "risk-low-aid": "<b>ปกติ:</b> ไม่พบอันตรายในขณะนี้ ควรเฝ้าระวังอาการต่อเนื่อง",
-                "risk-low-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>ควรสวมถุงมือและหน้ากากทุกครั้งในอนาคต</li><li>จดบันทึกประวัติการใช้สารเคมี</li></ul>"
+                "risk-low-recs": "<ul style='list-style-type: disc; margin-top: 10px;'><li>ควรสวมถุงมือและหน้ากากทุกครั้งในอนาคต</li><li>จดบันทึกประวัติการใช้สารเคมี</li></ul>",
+                "settings-title": "การตั้งค่า AI",
+                "settings-subtitle": "กำหนดค่าการเชื่อมต่อ AI เพื่อการสแกนฉลากจริง",
+                "settings-help": "Key ของคุณจะถูกเก็บไว้ในเบราว์เซอร์เท่านั้น สามารถขอ Key ได้ที่ <a href='https://aistudio.google.com/app/apikey' target='_blank' style='color: var(--primary);'>Google AI Studio</a>",
+                "api-status-sim": "โหมดจำลอง (ค่าเริ่มต้น)",
+                "api-status-ready": "เชื่อมต่อ Gemini API แล้ว ✅",
+                "btn-save": "บันทึกการตั้งค่า"
             }
         };
 
@@ -789,6 +879,34 @@
 
             if (pageId === 'page-history') {
                 loadHistory();
+            }
+            if (pageId === 'page-settings') {
+                updateApiStatusUI();
+            }
+        }
+
+        // Settings Management
+        function saveSettings() {
+            const key = document.getElementById('gemini-key').value.trim();
+            if (key) {
+                localStorage.setItem('agrishield_gemini_key', key);
+                alert(appState.currentLang === 'th' ? 'บันทึกสำเร็จ' : 'Settings saved');
+                updateApiStatusUI();
+            }
+        }
+
+        function updateApiStatusUI() {
+            const key = localStorage.getItem('agrishield_gemini_key');
+            const statusEl = document.getElementById('api-status');
+            const lng = appState.currentLang;
+            
+            if (key) {
+                statusEl.innerText = i18n[lng]['api-status-ready'];
+                statusEl.style.color = 'var(--success)';
+                document.getElementById('gemini-key').value = key;
+            } else {
+                statusEl.innerText = i18n[lng]['api-status-sim'];
+                statusEl.style.color = 'var(--text-sub)';
             }
         }
 
@@ -888,9 +1006,74 @@
             }
         };
 
-        function handleScanComplete() {
-            document.getElementById('chemical-name').value = "Generic Agrochemical";
-            navigateTo('page-input');
+        async function handleScanComplete() {
+            const btn = document.getElementById('btn-analyze');
+            const lng = appState.currentLang;
+            const apiKey = localStorage.getItem('agrishield_gemini_key');
+            
+            // Start Loading State
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+            
+            if (apiKey) {
+                try {
+                    const detectedChemical = await callGeminiVision(apiKey);
+                    document.getElementById('chemical-name').value = detectedChemical;
+                    btn.disabled = false;
+                    btn.classList.remove('btn-loading');
+                    navigateTo('page-input');
+                } catch (err) {
+                    console.error("Gemini Error:", err);
+                    alert("AI Error: " + err.message + ". Falling back to simulator.");
+                    runSimulator(btn, lng);
+                }
+            } else {
+                runSimulator(btn, lng);
+            }
+        }
+
+        function runSimulator(btn, lng) {
+            // Simulate AI Analysis Delay
+            setTimeout(() => {
+                const chemicalDb = [
+                    { en: 'Paraquat Dichloride (Herbicide)', th: 'พาราควอต ไดคลอไรด์ (ยาฆ่าหญ้า)' },
+                    { en: 'Glyphosate-isopropylammonium', th: 'ไกลโฟเซต-ไอโซโพรพิลแอมโมเนียม' },
+                    { en: 'Abamectin (Insecticide)', th: 'อะบาเมกติน (ยาฆ่าแมลง)' },
+                    { en: 'Chlorpyrifos (Organophosphate)', th: 'คลอร์ไพริฟอส (สารกำจัดแมลง)' },
+                    { en: 'Carbaryl (Carbamate)', th: 'คาร์บาริล (สารกำจัดแมลง)' }
+                ];
+                
+                const result = chemicalDb[Math.floor(Math.random() * chemicalDb.length)];
+                const detectedChemical = result[lng];
+                
+                document.getElementById('chemical-name').value = detectedChemical;
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                navigateTo('page-input');
+            }, 2000);
+        }
+
+        // Gemini Vision API Call
+        async function callGeminiVision(key) {
+            const imgData = previewImage.src.split(',')[1]; // Base64 part
+            const lang = appState.currentLang;
+            
+            // Import SDK dynamically via ESM
+            const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
+            const genAI = new GoogleGenerativeAI(key);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const prompt = `Identify the chemical name or active ingredient on this agricultural label. 
+                           Return ONLY the name in ${lang === 'th' ? 'Thai' : 'English'}. 
+                           If it's an insecticide/herbicide, include that in parentheses. 
+                           Example: Glyphosate (Herbicide).`;
+
+            const result = await model.generateContent([
+                prompt,
+                { inlineData: { data: imgData, mimeType: "image/jpeg" } }
+            ]);
+            
+            return result.response.text().trim();
         }
 
         function calculateAndShowResult() {
